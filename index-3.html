@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ma Famille Organisée</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f3fa;color:#342b3c;font-family:Arial,sans-serif}
+header{background:#76549a;color:white;padding:30px 18px;text-align:center}
+header h1{margin:0 0 8px}main{max-width:720px;margin:24px auto;padding:0 15px}
+section{background:white;border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 3px 12px #0001}
+h2{margin-top:0;font-size:21px}form{display:flex;flex-wrap:wrap;gap:8px}
+input,button{font:inherit;padding:12px;border-radius:9px}
+input{border:1px solid #d5cbdc;flex:1;min-width:145px}
+button{border:0;background:#76549a;color:white;cursor:pointer}
+li{padding:10px 0;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;overflow-wrap:anywhere}
+li span{flex:1;min-width:0;overflow-wrap:break-word}li input[type="checkbox"]{flex:0 0 auto;min-width:0;width:20px;height:20px}li button{flex:0 0 auto;max-width:110px;font-size:14px;white-space:nowrap}.done{text-decoration:line-through;color:#888}
+.delete{background:#f0e7f3;color:#593777;padding:7px 10px}
+small{color:#6b6170}footer{text-align:center;padding:15px}
+</style>
+</head>
+<body>
+<header><h1>💜 Ma Famille Organisée</h1><p>Une journée plus simple, une tâche à la fois</p></header>
+<main>
+<section>
+<h2>✅ Mes tâches</h2>
+<form id="taskForm"><input id="taskInput" placeholder="Ex. Préparer les cartables" required maxlength="120"><button>Ajouter</button></form>
+<ul id="tasks"></ul>
+</section>
+<section>
+<h2>📅 Activités et rendez-vous</h2>
+<form id="eventForm">
+<input id="eventName" placeholder="Ex. Gymnastique" required maxlength="120">
+<input id="eventDate" type="datetime-local" required>
+<button>Enregistrer</button>
+</form>
+<ul id="events"></ul>
+</section>
+<section><h2>🌸 Petit conseil</h2><p>Choisis trois priorités pour aujourd'hui. Le reste peut attendre.</p></section>
+<small>Version de démonstration : les données restent dans ce navigateur. Ne saisis pas d'informations sensibles.</small>
+</main>
+<footer>Ma Famille Organisée — Première version</footer>
+<script>
+const taskKey="famille-taches-v1", eventKey="famille-evenements-v1";
+const load=key=>{try{return JSON.parse(localStorage.getItem(key))||[]}catch{return []}};
+let tasks=load(taskKey),events=load(eventKey);
+const save=()=>{localStorage.setItem(taskKey,JSON.stringify(tasks));localStorage.setItem(eventKey,JSON.stringify(events))};
+const node=(tag,text)=>{const e=document.createElement(tag);e.textContent=text;return e};
+function renderTasks(){
+ const ul=document.getElementById("tasks");ul.replaceChildren();
+ tasks.forEach((t,i)=>{
+  const li=node("li",""),check=document.createElement("input");check.type="checkbox";check.checked=t.done;
+  check.setAttribute("aria-label","Terminer la tâche");
+  check.onchange=()=>{t.done=check.checked;save();renderTasks()};
+  const label=node("span",t.name);if(t.done)label.className="done";
+  const del=node("button","Supprimer");del.className="delete";del.onclick=()=>{tasks.splice(i,1);save();renderTasks()};
+  li.append(check,label,del);ul.append(li);
+ });
+}
+function renderEvents(){
+ const ul=document.getElementById("events");ul.replaceChildren();
+ events.sort((a,b)=>a.date.localeCompare(b.date));
+ events.forEach((e,i)=>{
+  const li=node("li",""),date=new Date(e.date);
+  const label=node("span",e.name+" — "+date.toLocaleString("fr-FR",{dateStyle:"medium",timeStyle:"short"}));
+  const del=node("button","Supprimer");del.className="delete";del.onclick=()=>{events.splice(i,1);save();renderEvents()};
+  li.append(label,del);ul.append(li);
+ });
+}
+document.getElementById("taskForm").onsubmit=e=>{
+ e.preventDefault();const input=document.getElementById("taskInput");
+ tasks.push({name:input.value.trim(),done:false});save();input.value="";renderTasks();
+};
+document.getElementById("eventForm").onsubmit=e=>{
+ e.preventDefault();const name=document.getElementById("eventName"),date=document.getElementById("eventDate");
+ events.push({name:name.value.trim(),date:date.value});save();e.target.reset();renderEvents();
+};
+renderTasks();renderEvents();
+</script>
+</body>
+</html>
